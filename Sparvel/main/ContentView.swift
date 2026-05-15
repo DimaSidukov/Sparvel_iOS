@@ -204,7 +204,7 @@ struct ExpandedPlayerView : View {
                 
                 Slider(
                     value: $sliderPosition,
-                    in: 0...100,
+                    in: 0.0...100.0,
                     onEditingChanged: { editing in
                         isEditing = editing
                         
@@ -220,11 +220,26 @@ struct ExpandedPlayerView : View {
                     guard !isEditing else {
                         return
                     }
-
+                    
                     sliderPosition = newValue
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 16)
+                
+                HStack {
+                    Text(
+                        formatProgress(
+                            progress: sliderPosition,
+                            duration: song.duration
+                        )
+                    )
+                    .font(.subheadline)
+                    
+                    Spacer()
+                    
+                    Text(formatDuration(duration: song.duration))
+                        .font(.subheadline)
+                }.padding(.horizontal, 16)
                 
                 HStack {
                     Button {
@@ -311,5 +326,37 @@ struct ExpandedPlayerView : View {
 struct SimpleView : View {
     var body: some View {
         Text("Hello world")
+    }
+}
+
+fileprivate func formatProgress(progress: Double, duration: Int64) -> String {
+    let progressInMillis = Int64((progress / 100) * Double(duration))
+    return formatDuration(duration: progressInMillis)
+}
+
+fileprivate func formatDuration(duration: Int64) -> String {
+    let hours = duration / 3600
+    let minutes = (duration % 3600) / 60
+    let seconds = duration % 60
+    
+    if hours > 0 {
+        return String(
+            format: "%02lld:%02lld:%02lld",
+            hours,
+            minutes,
+            seconds
+        )
+    }
+    
+    return String(
+        format: "%02lld:%02lld",
+        minutes,
+        seconds
+    )
+}
+
+#Preview {
+    ExpandedPlayerView(song: Song(id: "sdf", title: "sdfd", artist: "sdf", duration: 327000), isPlaying: false, currentPosition: 30) { intent in
+        
     }
 }

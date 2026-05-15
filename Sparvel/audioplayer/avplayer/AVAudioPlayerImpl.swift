@@ -12,6 +12,7 @@ class AVAudioPlayerImpl: AudioPlayer {
     private var player: AVPlayer? = nil
     private var progressObserver: Any? = nil
     private var stateObserver: NSKeyValueObservation? = nil
+    private var isSeekInProgress = false
 
     private var currentTrackDurationMs: Double = 0.0
 
@@ -20,11 +21,14 @@ class AVAudioPlayerImpl: AudioPlayer {
     // MARK: - Play
 
     func play(song: Song) {
+        
+        release()
 
         guard let bookmarkData = song.bookmarkData else {
             return
         }
-
+        
+        isPlaying = true
         var isStale = true
 
         guard let url = try? URL(
@@ -33,6 +37,7 @@ class AVAudioPlayerImpl: AudioPlayer {
             relativeTo: nil,
             bookmarkDataIsStale: &isStale
         ) else {
+            isPlaying = false
             return
         }
 
@@ -40,21 +45,11 @@ class AVAudioPlayerImpl: AudioPlayer {
 
         let item = AVPlayerItem(url: url)
         player = AVPlayer(playerItem: item)
+        
+        currentTrackDurationMs = Double(song.duration) * Self.MILLIS_IN_SECONDS
 
-        guard let asset = player?.currentItem?.asset else {
-            return
-        }
-
-        Task {
-            guard let durationSeconds = try? await asset.load(.duration).seconds else {
-                return
-            }
-
-            currentTrackDurationMs = durationSeconds * Self.MILLIS_IN_SECONDS
-
-            observePlayerState()
-            player?.play()
-        }
+        observePlayerState()
+        player?.play()
     }
 
     // MARK: - Controls
@@ -78,6 +73,8 @@ class AVAudioPlayerImpl: AudioPlayer {
         progressObserver = nil
         stateObserver = nil
         player = nil
+        currentSong = nil
+        isPlaying = false
     }
 
     // MARK: - Seek (0...100)
@@ -93,6 +90,8 @@ class AVAudioPlayerImpl: AudioPlayer {
             value: Int64(positionMs),
             timescale: Int32(Self.MILLIS_IN_SECONDS)
         )
+        
+        isSeekInProgress = true
 
         player?.seek(
             to: time,
@@ -106,8 +105,8 @@ class AVAudioPlayerImpl: AudioPlayer {
     private func observePlayerState() {
 
         let interval = CMTime(
-            seconds: 1,
-            preferredTimescale: 10
+            seconds: 0.1,
+            preferredTimescale: CMTimeScale(NSEC_PER_SEC)
         )
 
         progressObserver = player?.addPeriodicTimeObserver(
@@ -117,6 +116,10 @@ class AVAudioPlayerImpl: AudioPlayer {
 
             guard let self else { return }
             guard self.currentTrackDurationMs > 0 else { return }
+            if self.isSeekInProgress {
+                self.isSeekInProgress = false
+                return
+            }
 
             let currentMs = time.seconds * Self.MILLIS_IN_SECONDS
 

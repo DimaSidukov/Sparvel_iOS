@@ -167,14 +167,13 @@ fileprivate struct SongItem: View {
     let artist: String
     let bookmarkData: Data?
     
-    @State
-    var artwork: UIImage? = nil
+    @State var placeholderColor = Color.random
+    @State var artwork: UIImage? = nil
     
     var body: some View {
         HStack {
             ZStack {
-                Color.random
-                    .opacity(artwork == nil ? 1 : 0)
+                placeholderColor.opacity(artwork == nil ? 1 : 0)
                 
                 Image(uiImage: artwork ?? UIImage())
                     .resizable()

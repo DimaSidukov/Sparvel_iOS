@@ -81,9 +81,17 @@ class MediaRepository {
         // TODO: look how to handle isDataStale
         for url in audioUrls {
             
+            guard url.startAccessingSecurityScopedResource() else {
+                continue
+            }
+            
+            defer {
+                url.stopAccessingSecurityScopedResource()
+            }
+            
             let asset = AVURLAsset(url: url)
             let metadata = try? await asset.load(.commonMetadata)
-        
+            
             // ID
             let id = url.standardizedFileURL.path
             
@@ -139,7 +147,7 @@ class MediaRepository {
             
             if isDefaultTitle || isDefaultArtist {
                 let formats = (try? await asset.load(.availableMetadataFormats)) ?? []
-                    
+                
                 for format in formats {
                     if let metadata = try? await asset.loadMetadata(for: format) {
                         for item in metadata {

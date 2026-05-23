@@ -17,6 +17,9 @@ typedef struct AudioPlayer AudioPlayer;
 
 @property (nonatomic, assign) AudioPlayer* audioPlayer;
 
-- (void)play:(NSString*) fileUrlPath;
+- (void)play:(NSURL*) url;
+- (void)pause;
+- (void)seek:(int64_t) positionMs;
+- (void)releasePlayer;
 
 @end

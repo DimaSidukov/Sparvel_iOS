@@ -4,8 +4,8 @@
 
 #include "FFmpegDecoder.h"
 // TMP
-#include "../effects/pipeline/AudioEffectsPipeline.h"
-#include "../effects/pitchshifter/PitchShifterEffect.h"
+//#include "../effects/pipeline/AudioEffectsPipeline.h"
+//#include "../effects/pitchshifter/PitchShifterEffect.h"
 
 void FFmpegDecoder::print_error(const char *prefix, int error_code) {
 #ifdef NDEBUG
@@ -17,7 +17,7 @@ void FFmpegDecoder::print_error(const char *prefix, int error_code) {
         if (av_strerror(error_code, buf, bufsize) != 0) {
             strcpy(buf, "UNKNOWN_ERROR");
         }
-        LOGD("%s (%d: %s)\n", prefix, error_code, buf);
+        printf("%s (%d: %s)\n", prefix, error_code, buf);
     }
 #endif
 }
@@ -42,30 +42,30 @@ int FFmpegDecoder::find_audio_stream(const AVFormatContext *format_context) {
  * Print information about the input file and the used codec.
  */
 void FFmpegDecoder::print_stream_information(const AVCodec *codec, const AVCodecContext *codec_context, int audio_stream_index) {
-    LOGD("Codec: %s\n", codec->long_name);
+    printf("Codec: %s\n", codec->long_name);
     if (codec->sample_fmts != nullptr) {
-        LOGD("Supported sample formats: ");
+        printf("Supported sample formats: ");
         for (int i = 0; codec->sample_fmts[i] != -1; ++i) {
-            LOGD("%s", av_get_sample_fmt_name(codec->sample_fmts[i]));
+            printf("%s", av_get_sample_fmt_name(codec->sample_fmts[i]));
             if (codec->sample_fmts[i + 1] != -1) {
-                LOGD(", ");
+                printf(", ");
             }
         }
-        LOGD("\n");
+        printf("\n");
     }
-    LOGD("---------\n");
-    LOGD("Stream:        %7d\n", audio_stream_index);
-    LOGD("Sample Format: %7s\n", av_get_sample_fmt_name(codec_context->sample_fmt));
-    LOGD("Sample Rate:   %7d\n", codec_context->sample_rate);
-    LOGD("Sample Size:   %7d\n", av_get_bytes_per_sample(codec_context->sample_fmt));
-    LOGD("Channels:      %7d\n", codec_context->ch_layout.nb_channels);
-    LOGD("Float Output:  %7s\n", av_sample_fmt_is_planar(codec_context->sample_fmt) ? "yes" : "no");
+    printf("---------\n");
+    printf("Stream:        %7d\n", audio_stream_index);
+    printf("Sample Format: %7s\n", av_get_sample_fmt_name(codec_context->sample_fmt));
+    printf("Sample Rate:   %7d\n", codec_context->sample_rate);
+    printf("Sample Size:   %7d\n", av_get_bytes_per_sample(codec_context->sample_fmt));
+    printf("Channels:      %7d\n", codec_context->ch_layout.nb_channels);
+    printf("Float Output:  %7s\n", av_sample_fmt_is_planar(codec_context->sample_fmt) ? "yes" : "no");
 }
 
 /**
  * Receive as many frames as available and handle them.
  */
-int FFmpegDecoder::receive_and_handle(AudioBuffer *output) {
+int FFmpegDecoder::receive_and_handle(CircularAudioBuffer *output) {
     int err = 0;
     // Read the packets from the decoder.
     // NOTE: Each packet may generate more than one frame, depending on the codec.
@@ -82,7 +82,7 @@ int FFmpegDecoder::receive_and_handle(AudioBuffer *output) {
 /**
  * Write the frame to an output file.
  */
-void FFmpegDecoder::handle_frame(AudioBuffer *output) {
+void FFmpegDecoder::handle_frame(CircularAudioBuffer *output) {
     size_t frame_size = frame->nb_samples * codec_context->ch_layout.nb_channels;
 
     if (frame_buffer.size() < frame_size)
@@ -108,11 +108,11 @@ void FFmpegDecoder::handle_frame(AudioBuffer *output) {
     int bufferSize = static_cast<int>(frame_buffer.size());
     auto* outData = new float[bufferSize];
     memcpy(outData, frame_buffer.data(), bufferSize * sizeof(float));
-    audioEffectsPipeline->process(
-        frame_buffer.data(),
-        static_cast<int>(frame_buffer.size()),
-        outData
-    );
+//    audioEffectsPipeline->process(
+//        frame_buffer.data(),
+//        static_cast<int>(frame_buffer.size()),
+//        outData
+//    );
 
     while (!should_stop_execution && output->get_free_space() < frame_size) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -149,7 +149,7 @@ float FFmpegDecoder::get_sample(const AVCodecContext *codec_context, const uint8
             break;
 
         default:
-            LOGD("Invalid sample size %d.\n", sampleSize);
+            printf("Invalid sample size %d.\n", sampleSize);
             return 0;
     }
 
@@ -183,7 +183,7 @@ float FFmpegDecoder::get_sample(const AVCodecContext *codec_context, const uint8
     return ret;
 }
 
-void FFmpegDecoder::drain_decoder(AudioBuffer *output) {
+void FFmpegDecoder::drain_decoder(CircularAudioBuffer *output) {
     int err;
     // Some codecs may buffer frames. Sending NULL activates drain-mode.
     if ((err = avcodec_send_packet(codec_context, nullptr)) == 0) {
@@ -203,13 +203,13 @@ FFmpegDecoder::FFmpegDecoder(
     int &sample_rate,
     int &channel_count,
     const char *file_path,
-    size_t &array_size,
-    std::unique_ptr<AudioEffectsPipeline> pipeline
+    size_t &array_size
+    // std::unique_ptr<AudioEffectsPipeline> pipeline
 ) : path(file_path) {
     in_file = fopen(file_path, "r");
     if (!in_file) {
         free(in_file);
-        LOGD("Error opening file %s", file_path);
+        printf("Error opening file %s", file_path);
         return;
     }
 
@@ -226,7 +226,7 @@ FFmpegDecoder::FFmpegDecoder(
     audio_stream_index = find_audio_stream(format_context);
     if (audio_stream_index == -1) {
         // No audio stream was found.
-        LOGD("None of the available %d streams are audio streams.\n", format_context->nb_streams);
+        printf("None of the available %d streams are audio streams.\n", format_context->nb_streams);
         avformat_close_input(&format_context);
         return;
     }
@@ -236,7 +236,7 @@ FFmpegDecoder::FFmpegDecoder(
             format_context->streams[audio_stream_index]->codecpar->codec_id);
     if (codec == nullptr) {
         // Decoder not found.
-        LOGD("Decoder not found. The codec is not supported.\n");
+        printf("Decoder not found. The codec is not supported.\n");
         avformat_close_input(&format_context);
         return;
     }
@@ -248,7 +248,7 @@ FFmpegDecoder::FFmpegDecoder(
     if (codec_context == nullptr) {
         // Something went wrong. Cleaning up...
         avformat_close_input(&format_context);
-        LOGD("Could not allocate a decoding context.\n");
+        printf("Could not allocate a decoding context.\n");
         return;
     }
 
@@ -257,10 +257,9 @@ FFmpegDecoder::FFmpegDecoder(
                                              format_context->streams[audio_stream_index]->codecpar)) !=
         0) {
         // Something went wrong. Cleaning up...
-        avcodec_close(codec_context);
         avcodec_free_context(&codec_context);
         avformat_close_input(&format_context);
-        LOGD("Error setting codec context parameters. %d", err);
+        printf("Error setting codec context parameters. %d", err);
         return;
     }
 
@@ -269,7 +268,6 @@ FFmpegDecoder::FFmpegDecoder(
     // Initialize the decoder.
     if ((err = avcodec_open2(codec_context, codec, nullptr)) != 0) {
         print_error("Error initializing a decoder", err);
-        avcodec_close(codec_context);
         avcodec_free_context(&codec_context);
         avformat_close_input(&format_context);
         return;
@@ -282,7 +280,6 @@ FFmpegDecoder::FFmpegDecoder(
 
     frame = nullptr;
     if ((frame = av_frame_alloc()) == nullptr) {
-        avcodec_close(codec_context);
         avcodec_free_context(&codec_context);
         avformat_close_input(&format_context);
         return;
@@ -290,13 +287,13 @@ FFmpegDecoder::FFmpegDecoder(
 
     frame_buffer.resize(codec_context->frame_size * codec_context->ch_layout.nb_channels);
     array_size = static_cast<size_t>(buffer_duration_seconds * sample_rate * channel_count);
-    audioEffectsPipeline = std::move(pipeline);
-    audioEffectsPipeline->updateConfiguration(
-            codec_context->sample_rate
-    );
+//    audioEffectsPipeline = std::move(pipeline);
+//    audioEffectsPipeline->updateConfiguration(
+//            codec_context->sample_rate
+//    );
 }
 
-void FFmpegDecoder::decode_packet(AudioBuffer *output_packet) {
+void FFmpegDecoder::decode_packet(CircularAudioBuffer *output_packet) {
     AVPacket *packet = av_packet_alloc();
     int err;
 
@@ -349,7 +346,7 @@ void FFmpegDecoder::seek_to(int64_t timestamp_ms) {
 
     int ret = av_seek_frame(format_context, audio_stream_index, timestamp, AVSEEK_FLAG_BACKWARD);
     if (ret < 0) {
-        LOGD("Seek failed to %lld ms", timestamp_ms);
+        printf("Seek failed to %lld ms", timestamp_ms);
         return;
     }
 
@@ -362,7 +359,7 @@ FFmpegDecoder::~FFmpegDecoder() {
     av_frame_free(&frame);
 
     // Close the context and free all data associated to it, but not the context itself.
-    avcodec_close(codec_context);
+    // avcodec_close(codec_context);
 
     // Free the context itself.
     avcodec_free_context(&codec_context);

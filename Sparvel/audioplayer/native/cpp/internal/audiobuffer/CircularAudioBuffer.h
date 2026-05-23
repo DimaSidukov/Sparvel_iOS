@@ -8,6 +8,7 @@
 #include <vector>
 #include <thread>
 
+// TODO: remove from the project, use Apple's AudioBuffer
 class CircularAudioBuffer {
 public:
     explicit CircularAudioBuffer(size_t size): buffer(new float[size]), buffer_size(size) { }

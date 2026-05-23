@@ -10,7 +10,7 @@ import Observation
 @Observable
 class ContentViewViewModel {
     
-    private let player : AudioPlayer = AVAudioPlayerImpl()
+    private let player : AudioPlayer = NativeAudioPlayer()
     private(set) var isPlayerExpanded = false
     
     var uiState: ContentViewState {

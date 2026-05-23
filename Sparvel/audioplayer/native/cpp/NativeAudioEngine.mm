@@ -10,13 +10,24 @@
 
 @implementation NativeAudioEngine
 
-- (void)play:(NSString*) fileUrlPath {
-    
-    char* filePath = strdup([fileUrlPath UTF8String]);
-    
-    
-    
-    free(filePath);
+- (void)play:(NSURL*) url {
+    NSString *path = url.path;
+
+    const char *filePath = [[NSFileManager defaultManager] fileSystemRepresentationWithPath:path];
+
+    _audioPlayer = new AudioPlayer(filePath, nullptr);
+}
+
+- (void)pause {
+    _audioPlayer->pause();
+}
+
+- (void)seek:(int64_t) positionMs {
+    _audioPlayer->seek(positionMs);
+}
+
+- (void)releasePlayer {
+    _audioPlayer->releasePlayer();
 }
 
 @end

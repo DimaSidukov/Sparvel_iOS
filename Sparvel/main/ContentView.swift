@@ -37,24 +37,37 @@ struct ContentView: View {
                         Label("Settings", systemImage: "gear")
                     }
             }
-            // TODO: to overlay
-//            .tabViewBottomAccessory(isEnabled: state.currentSong != nil) {
-//                let song = state.currentSong
-//                if song != nil {
-//                    CollapsedPlayerView(
-//                        song: song!,
-//                        isPlaying: state.isPlaying,
-//                        onIntent: { intent in
-//                            viewModel.onIntent(intent: intent)
-//                        }
-//                    )
-//                    .onTapGesture {
-//                        withAnimation(.easeInOut(duration: 0.35)) {
-//                            viewModel.onIntent(intent: ContentIntent.TogglePlayerSheetState)
-//                        }
-//                    }
-//                }
-//            }
+            .overlay(alignment: .bottom) {
+                ZStack {
+                    let song = state.currentSong
+                    if song != nil {
+                        CollapsedPlayerView(
+                            song: song!,
+                            isPlaying: state.isPlaying,
+                            onIntent: { intent in
+                                viewModel.onIntent(intent: intent)
+                            }
+                        )
+                        .onTapGesture {
+                            withAnimation(.easeInOut(duration: 0.35)) {
+                                viewModel.onIntent(intent: ContentIntent.TogglePlayerSheetState)
+                            }
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: 100)
+                .clipShape(
+                    RoundedRectangle(
+                        cornerRadius: 26,
+                        style: .continuous
+                    )
+                )
+                .padding(.bottom, UITabBarController().height)
+                .padding(.top, 16)
+                .padding(.leading, 16)
+                .padding(.trailing, 16)
+                
+            }.ignoresSafeArea()
             if (state.isPlayerExpanded) {
                 ExpandedPlayerView(
                     song: state.currentSong!,
@@ -80,8 +93,39 @@ struct CollapsedPlayerView: View {
     let isPlaying: Bool
     let onIntent: (ContentIntent) -> Void
     
-    @State var placeholderColor = Color.random
+    var image : String {
+        if (isPlaying) {
+            "pause.fill"
+        } else {
+            "play.fill"
+        }
+    }
+    
+    var body: some View {
+        if #available(iOS 26.0, *) {
+            CollapsedPlayerContentView(
+                song: song,
+                isPlaying: isPlaying,
+                onIntent: onIntent
+            ).glassEffect()
+        } else {
+            CollapsedPlayerContentView(
+                song: song,
+                isPlaying: isPlaying,
+                onIntent: onIntent
+            ).background(.background)
+        }
+    }
+}
+
+struct CollapsedPlayerContentView : View {
+    
+    let song: Song
+    let isPlaying: Bool
+    let onIntent: (ContentIntent) -> Void
+    
     @State var artwork: UIImage? = nil
+    @State var placeholderColor = Color.random
     
     var image : String {
         if (isPlaying) {
@@ -132,6 +176,7 @@ struct CollapsedPlayerView: View {
             }
         }
         .padding(.horizontal, 16)
+        .padding(.vertical, 4)
         .task {
             guard artwork == nil else { return }
             
@@ -354,6 +399,15 @@ fileprivate func formatDuration(duration: Int64) -> String {
         minutes,
         seconds
     )
+}
+
+extension UITabBarController {
+    var height: CGFloat {
+        return self.tabBar.frame.size.height
+    }
+    var width: CGFloat {
+        return self.tabBar.frame.size.width
+    }
 }
 
 #Preview {

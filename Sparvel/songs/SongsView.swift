@@ -144,11 +144,10 @@ fileprivate struct DataView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                         .padding(.leading, 16)
                 }
-                // TODO: check on 18 iOS
                 if #available(iOS 26.0, *) {
                     ToolbarSpacer()
                 }
-                ToolbarItem(placement: .confirmationAction) {
+                ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         onFileSelectToggleChange(true)
                     } label: {

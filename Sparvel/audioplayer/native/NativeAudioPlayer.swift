@@ -14,15 +14,33 @@ class NativeAudioPlayer : AudioPlayer {
     var currentPosition: Double = 0.0
     var currentSong: Song? = nil
     
-    let audioEngine = NativeAudioEngine()
+    private var selectedSong: Song? = nil
+    
+    var audioEngine : NativeAudioEngine {
+        return NativeAudioEngine(
+            position: { _, _ in
+                
+            },
+            state: { _ in
+                
+            },
+            initialization: { isSuccess in
+                if isSuccess == 0 {
+                    self.currentSong = self.selectedSong
+                }
+            }
+        )
+    }
     
     func play(song: Song) {
+        
+        self.selectedSong = song
         
         guard let bookmarkData = song.bookmarkData else {
             return
         }
         var isStale = true
-
+        
         guard let url = try? URL(
             resolvingBookmarkData: bookmarkData,
             options: [],

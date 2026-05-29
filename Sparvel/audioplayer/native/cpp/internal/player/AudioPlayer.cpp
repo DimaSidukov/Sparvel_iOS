@@ -40,6 +40,7 @@ void AudioPlayer::init() {
     status = AudioComponentInstanceNew(inputComponent, &audioUnit);
     if (status != 0) {
         printf("Error preparing output properties, exit with status %d\n", status);
+        callback->on_data_loaded(status);
         return;
     }
     
@@ -52,6 +53,7 @@ void AudioPlayer::init() {
                          sizeof(kEnableOutput));
     if (status != 0) {
         printf("Error enabling IO, exit with status %d\n", status);
+        callback->on_data_loaded(status);
         return;
     }
     
@@ -62,7 +64,8 @@ void AudioPlayer::init() {
     
     decoder = std::make_unique<FFmpegDecoder>(sampleRate, channelCount, file_path, arraySize);
     if (sampleRate == -1 || channelCount == -1) {
-        printf("Failed to read data from the file, exit with status %d\n", status);
+        printf("Failed to read data from the file");
+        callback->on_data_loaded(-1);
         return;
     }
     channel_count = channelCount;
@@ -89,6 +92,7 @@ void AudioPlayer::init() {
     
     if (status != 0) {
         printf("Failed to set audio format for output, exit with status %d\n", status);
+        callback->on_data_loaded(status);
         return;
     }
     
@@ -110,14 +114,18 @@ void AudioPlayer::init() {
     status = AudioUnitInitialize(audioUnit);
     if (status != 0) {
         printf("Failed to initialize audio unit, exit with status %d\n", status);
+        callback->on_data_loaded(status);
         return;
     }
     
     status = AudioOutputUnitStart(audioUnit);
     if (status != 0) {
         printf("Failed to start audio unit, exit with status %d\n", status);
+        callback->on_data_loaded(status);
         return;
     }
+    
+    callback->on_data_loaded(status);
 }
 
 void AudioPlayer::decode() {

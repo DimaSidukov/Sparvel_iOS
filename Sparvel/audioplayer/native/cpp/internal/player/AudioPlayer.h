@@ -8,12 +8,7 @@
 #include "inttypes.h"
 #import <AudioUnit/AudioUnit.h>
 #import "../decoder/FFmpegDecoder.h"
-
-class PlaybackCallback {
-public:
-    virtual void on_position_update(int64_t position, int force) = 0;
-    virtual void on_state_update(int is_playing) = 0;
-};
+#import "PlaybackCallback.h"
 
 class AudioPlayer {
 private:

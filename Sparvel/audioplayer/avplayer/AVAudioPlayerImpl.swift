@@ -1,13 +1,16 @@
 internal import Foundation
-import Observation
 internal import AVFoundation
+import Combine
 
-@Observable
 class AVAudioPlayerImpl: AudioPlayer {
 
-    var isPlaying: Bool = false
-    var currentPosition: Double = 0.0   // 0...100
-    var currentSong: Song?
+    @Published var isPlaying: Bool = false
+    @Published var currentPosition: Double = 0.0
+    @Published var currentSong: Song? = nil
+    
+    var isPlayingPublisher: Published<Bool>.Publisher { $isPlaying }
+    var currentPositionPublisher: Published<Double>.Publisher { $currentPosition }
+    var currentSongPublisher: Published<Song?>.Publisher { $currentSong }
 
     private var player: AVPlayer? = nil
     private var progressObserver: Any? = nil

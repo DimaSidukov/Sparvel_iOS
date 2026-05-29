@@ -5,15 +5,16 @@
 //  Created by Dmitriy Sidukov on 13.05.2026.
 //
 
+import Combine
 
 protocol AudioPlayer {
     
-    var isPlaying: Bool { get }
+    var isPlayingPublisher: Published<Bool>.Publisher { get }
     
     // 0-100 range
-    var currentPosition: Double { get }
+    var currentPositionPublisher: Published<Double>.Publisher { get }
     
-    var currentSong: Song? { get }
+    var currentSongPublisher: Published<Song?>.Publisher { get }
     
     func play(song: Song)
     

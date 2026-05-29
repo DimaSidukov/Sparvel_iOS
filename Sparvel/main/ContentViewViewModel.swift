@@ -5,23 +5,26 @@
 //  Created by Dmitriy Sidukov on 07.05.2026.
 //
 
-import Observation
+import Combine
 
-@Observable
-class ContentViewViewModel {
+class ContentViewViewModel : ObservableObject {
     
     private let player : AudioPlayer = NativeAudioPlayer()
-    private(set) var isPlayerExpanded = false
     
-    var uiState: ContentViewState {
-        ContentViewState(
-            currentSong: player.currentSong,
-            isPlayerExpanded: isPlayerExpanded,
-            isPlaying: player.isPlaying
-        )
-    }
-    var currentPosition : Double {
-        player.currentPosition
+    @Published private(set) var uiState: ContentViewState = ContentViewState(
+        currentSong: nil,
+        isPlayerExpanded: false,
+        isPlaying: false
+    )
+    
+    @Published private(set) var currentPosition : Double = 0.0
+
+    private var currentSongSubscriber: AnyCancellable?
+    private var isPlayingSubscriber: AnyCancellable?
+    private var currentPositionSubsriber: AnyCancellable?
+    
+    init() {
+        subscribeToEvents()
     }
     
     func onIntent(intent: ContentIntent) {
@@ -38,12 +41,33 @@ class ContentViewViewModel {
         
     }
     
+    private func subscribeToEvents() {
+        currentSongSubscriber = player.currentSongPublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] newValue in
+                guard let self else { return }
+                self.uiState = self.uiState.copy(currentSong: newValue)
+            }
+        isPlayingSubscriber = player.isPlayingPublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] newValue in
+                guard let self else { return }
+                self.uiState = self.uiState.copy(isPlaying: newValue)
+            }
+        currentPositionSubsriber = player.currentPositionPublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] newValue in
+                guard let self else { return }
+                self.currentPosition = newValue
+            }
+    }
+    
     private func togglePlayback() {
         player.pause()
     }
     
     private func togglePlayerSheetState() {
-        isPlayerExpanded = !isPlayerExpanded
+        self.uiState = self.uiState.copy(isPlayerExpanded: !self.uiState.isPlayerExpanded)
     }
     
     private func selectSong(song: Song) {

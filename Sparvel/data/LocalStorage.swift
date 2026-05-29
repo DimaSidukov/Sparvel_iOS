@@ -5,9 +5,21 @@
 //  Created by Dmitriy Sidukov on 07.05.2026.
 //
 
-import SwiftData
+internal import Foundation
+import CoreData
 
-let modelContainer = try? ModelContainer(
-    for: Song.self,
-    configurations: ModelConfiguration(isStoredInMemoryOnly: false, allowsSave: true)
-)
+class LocalStorage {
+    
+    private let coreDataStack = CoreDataStack.shared
+    
+    func saveSongs(songs: [Song]) {
+        coreDataStack.saveSongs(songs: songs)
+    }
+    
+    func loadSongs() -> [Song] {
+        return coreDataStack.loadSongs()
+    }
+    
+}
+
+

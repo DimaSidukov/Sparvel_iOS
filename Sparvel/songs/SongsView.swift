@@ -61,6 +61,14 @@ fileprivate struct NoDataView: View {
     let onIntent: (SongsIntent) -> Void
     let onFileSelectToggleChange : (Bool  ) -> Void
     
+    var buttonStyle : some PrimitiveButtonStyle {
+        if #available(iOS 26.0, *) {
+            return .glass
+        } else {
+            return .automatic
+        }
+    }
+    
     var body: some View {
         Text("Click on the button below to load songs")
         
@@ -75,7 +83,7 @@ fileprivate struct NoDataView: View {
                 .padding(.vertical, 8)
                 .clipShape(Circle())
         }
-        .buttonStyle(.glass)
+        .buttonStyle(buttonStyle)
         .fileImporter(
             isPresented: isFileImporterVisible,
             allowedContentTypes: [.folder, .audio],
@@ -136,7 +144,10 @@ fileprivate struct DataView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                         .padding(.leading, 16)
                 }
-                ToolbarSpacer()
+                // TODO: check on 18 iOS
+                if #available(iOS 26.0, *) {
+                    ToolbarSpacer()
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button {
                         onFileSelectToggleChange(true)

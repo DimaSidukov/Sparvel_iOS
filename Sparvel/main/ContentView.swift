@@ -37,23 +37,24 @@ struct ContentView: View {
                         Label("Settings", systemImage: "gear")
                     }
             }
-            .tabViewBottomAccessory(isEnabled: state.currentSong != nil) {
-                let song = state.currentSong
-                if song != nil {
-                    CollapsedPlayerView(
-                        song: song!,
-                        isPlaying: state.isPlaying,
-                        onIntent: { intent in
-                            viewModel.onIntent(intent: intent)
-                        }
-                    )
-                    .onTapGesture {
-                        withAnimation(.easeInOut(duration: 0.35)) {
-                            viewModel.onIntent(intent: ContentIntent.TogglePlayerSheetState)
-                        }
-                    }
-                }
-            }
+            // TODO: to overlay
+//            .tabViewBottomAccessory(isEnabled: state.currentSong != nil) {
+//                let song = state.currentSong
+//                if song != nil {
+//                    CollapsedPlayerView(
+//                        song: song!,
+//                        isPlaying: state.isPlaying,
+//                        onIntent: { intent in
+//                            viewModel.onIntent(intent: intent)
+//                        }
+//                    )
+//                    .onTapGesture {
+//                        withAnimation(.easeInOut(duration: 0.35)) {
+//                            viewModel.onIntent(intent: ContentIntent.TogglePlayerSheetState)
+//                        }
+//                    }
+//                }
+//            }
             if (state.isPlayerExpanded) {
                 ExpandedPlayerView(
                     song: state.currentSong!,

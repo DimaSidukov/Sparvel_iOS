@@ -30,7 +30,7 @@ class MediaRepository {
         if urls.count == 1 && urls.first!.hasDirectoryPath {
             await loadSongsFromDirectory(url: urls.first!)
         } else {
-            await loadSongsFromList(urls: urls)
+            await loadSongsFromList(urls: urls, requireScopedAccess: true)
         }
     }
     
@@ -66,10 +66,10 @@ class MediaRepository {
             return
         }
         
-        await loadSongsFromList(urls: fileUrls)
+        await loadSongsFromList(urls: fileUrls, requireScopedAccess: false)
     }
     
-    private func loadSongsFromList(urls: [URL]) async {
+    private func loadSongsFromList(urls: [URL], requireScopedAccess: Bool) async {
         
         let audioUrls = urls.filter { url in
             let ext = url.pathExtension.lowercased()
@@ -81,12 +81,16 @@ class MediaRepository {
         // TODO: look how to handle isDataStale
         for url in audioUrls {
             
-            guard url.startAccessingSecurityScopedResource() else {
-                continue
+            if requireScopedAccess {
+                guard url.startAccessingSecurityScopedResource() else {
+                    continue
+                }
             }
             
             defer {
-                url.stopAccessingSecurityScopedResource()
+                if requireScopedAccess {
+                    url.stopAccessingSecurityScopedResource()
+                }
             }
             
             let asset = AVURLAsset(url: url)

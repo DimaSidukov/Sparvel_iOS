@@ -10,13 +10,11 @@ internal import UniformTypeIdentifiers
 internal import AVFoundation
 internal import Foundation
 import SwiftData
-import Combine
 
+@Observable
 class MediaRepository {
     
-    private let localStorage = LocalStorage()
-    
-    @Published var state: MediaState = .Idle
+    var state: MediaState = .Idle
     
     init() {
         querySongs()
@@ -37,9 +35,13 @@ class MediaRepository {
     }
     
     private func querySongs() {
-        let songs = localStorage.loadSongs()
-        if !songs.isEmpty {
-            state = MediaState.Loaded(songs)
+        guard let context = modelContainer?.mainContext else {
+            return
+        }
+        if let songs = try? context.fetch(FetchDescriptor<Song>()) {
+            if !songs.isEmpty {
+                state = MediaState.Loaded(songs)
+            }
         }
     }
     
@@ -79,13 +81,13 @@ class MediaRepository {
         // TODO: look how to handle isDataStale
         for url in audioUrls {
             
-//            guard url.startAccessingSecurityScopedResource() else {
-//                continue
-//            }
-//            
-//            defer {
-//                url.stopAccessingSecurityScopedResource()
-//            }
+            guard url.startAccessingSecurityScopedResource() else {
+                continue
+            }
+            
+            defer {
+                url.stopAccessingSecurityScopedResource()
+            }
             
             let asset = AVURLAsset(url: url)
             let metadata = try? await asset.load(.commonMetadata)
@@ -188,7 +190,13 @@ class MediaRepository {
     }
     
     private func saveSongs(songs: [Song]) {
-        localStorage.saveSongs(songs: songs)
+        guard let context = modelContainer?.mainContext else {
+            return
+        }
+        for song in songs {
+            context.insert(song)
+        }
+        try? context.save()
     }
     
     static let LOSSY_AUDIO_EXTENSIONS: Set<String> = [

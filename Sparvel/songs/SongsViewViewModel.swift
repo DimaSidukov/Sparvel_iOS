@@ -1,13 +1,12 @@
 
+import Observation
 internal import UniformTypeIdentifiers
-import Combine
 
-class SongsViewViewModel : ObservableObject {
+@Observable
+class SongsViewViewModel {
 
-    @Published private(set) var uiState: SongsViewState = .NoData
-    
+    private(set) var uiState: SongsViewState = .NoData
     private let repository = MediaRepository()
-    private var repositoryStateSubscriber: AnyCancellable?
     
     init() {
         queryCachedSongs()
@@ -26,11 +25,13 @@ class SongsViewViewModel : ObservableObject {
     }
     
     private func queryCachedSongs() {
-        repositoryStateSubscriber = repository.$state
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] newState in
-                self?.observeState(state: newState)
+        withObservationTracking {
+            observeState(state: repository.state)
+        } onChange: {
+            Task { @MainActor in
+                self.queryCachedSongs()
             }
+        }
     }
     
     private func observeState(state: MediaRepository.MediaState) {

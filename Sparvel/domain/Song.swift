@@ -6,9 +6,13 @@
 //
 
 internal import Foundation
+import SwiftData
 
 // TODO: probably inherit Hashable and Identifiable?
+// TODO: migrate to CoreData and lower iOS version to 16.6
+@Model
 class Song {
+    @Attribute(.unique)
     var id: String
     var title: String
     var artist: String

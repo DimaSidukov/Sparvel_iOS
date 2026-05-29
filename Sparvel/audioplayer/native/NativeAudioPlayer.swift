@@ -5,17 +5,14 @@
 //  Created by Dmitriy Sidukov on 15.05.2026.
 //
 
-import Combine
+import Observation
 
+@Observable
 class NativeAudioPlayer : AudioPlayer {
     
-    @Published var isPlaying: Bool = false
-    @Published var currentPosition: Double = 0.0
-    @Published var currentSong: Song? = nil
-    
-    var isPlayingPublisher: Published<Bool>.Publisher { $isPlaying }
-    var currentPositionPublisher: Published<Double>.Publisher { $currentPosition }
-    var currentSongPublisher: Published<Song?>.Publisher { $currentSong }
+    var isPlaying: Bool = false
+    var currentPosition: Double = 0.0
+    var currentSong: Song? = nil
     
     let audioEngine = NativeAudioEngine()
     
@@ -25,7 +22,7 @@ class NativeAudioPlayer : AudioPlayer {
             return
         }
         var isStale = true
-        
+
         guard let url = try? URL(
             resolvingBookmarkData: bookmarkData,
             options: [],

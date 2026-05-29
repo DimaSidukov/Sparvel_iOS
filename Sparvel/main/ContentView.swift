@@ -6,11 +6,10 @@
 //
 
 import SwiftUI
-import Combine
 
 struct ContentView: View {
     
-    @ObservedObject
+    @State
     private var viewModel = ContentViewViewModel()
     
     private var state: ContentViewState {
@@ -38,24 +37,23 @@ struct ContentView: View {
                         Label("Settings", systemImage: "gear")
                     }
             }
-            // TODO: rewrite to overlay
-//            .tabViewBottomAccessory(isEnabled: state.currentSong != nil) {
-//                let song = state.currentSong
-//                if song != nil {
-//                    CollapsedPlayerView(
-//                        song: song!,
-//                        isPlaying: state.isPlaying,
-//                        onIntent: { intent in
-//                            viewModel.onIntent(intent: intent)
-//                        }
-//                    )
-//                    .onTapGesture {
-//                        withAnimation(.easeInOut(duration: 0.35)) {
-//                            viewModel.onIntent(intent: ContentIntent.TogglePlayerSheetState)
-//                        }
-//                    }
-//                }
-//            }
+            .tabViewBottomAccessory(isEnabled: state.currentSong != nil) {
+                let song = state.currentSong
+                if song != nil {
+                    CollapsedPlayerView(
+                        song: song!,
+                        isPlaying: state.isPlaying,
+                        onIntent: { intent in
+                            viewModel.onIntent(intent: intent)
+                        }
+                    )
+                    .onTapGesture {
+                        withAnimation(.easeInOut(duration: 0.35)) {
+                            viewModel.onIntent(intent: ContentIntent.TogglePlayerSheetState)
+                        }
+                    }
+                }
+            }
             if (state.isPlayerExpanded) {
                 ExpandedPlayerView(
                     song: state.currentSong!,
@@ -218,7 +216,7 @@ struct ExpandedPlayerView : View {
                 .onAppear {
                     sliderPosition = currentPosition
                 }
-                .onChange(of: currentPosition) { newValue in
+                .onChange(of: currentPosition) { _, newValue in
                     guard !isEditing else {
                         return
                     }

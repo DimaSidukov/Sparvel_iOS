@@ -16,13 +16,17 @@ class NativeAudioPlayer : AudioPlayer {
     
     private var selectedSong: Song? = nil
     
-    var audioEngine : NativeAudioEngine {
-        return NativeAudioEngine(
-            position: { _, _ in
-                
+    private var audioEngine : NativeAudioEngine?
+    
+    init() {
+        self.audioEngine = NativeAudioEngine(
+            position: { newPosition, force in
+                guard let currentSong = self.currentSong else { return }
+                let positionInSeconds = ((Double(newPosition) / 1000) / Double(currentSong.duration)) * 100.0
+                self.currentPosition = positionInSeconds
             },
-            state: { _ in
-                
+            state: { isCurrentlyPlaying in
+                self.isPlaying = isCurrentlyPlaying == 1
             },
             initialization: { isSuccess in
                 if isSuccess == 0 {
@@ -51,22 +55,22 @@ class NativeAudioPlayer : AudioPlayer {
             return
         }
         
-        audioEngine.play(url)
+        audioEngine?.play(url)
     }
     
     func pause() {
-        audioEngine.pause()
+        audioEngine?.pause()
     }
     
     func release() {
         // TODO: use ARC release overload?
-        audioEngine.releasePlayer()
+        audioEngine?.releasePlayer()
     }
     
     func seek(position: Double) {
         guard let currentSong = currentSong else { return }
-        let positionMs = Int64((position / 100.0) * Double(currentSong.duration))
-        audioEngine.seek(positionMs)
+        let positionMs = Int64((position / 100.0) * Double(currentSong.duration * 1000))
+        audioEngine?.seek(positionMs)
     }
     
     

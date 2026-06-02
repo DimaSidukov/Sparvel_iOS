@@ -6,31 +6,48 @@
 //
 
 #include "inttypes.h"
+#include <atomic>
 #import <AudioUnit/AudioUnit.h>
 #import "../decoder/FFmpegDecoder.h"
 #import "PlaybackCallback.h"
 
+
+enum class ResumeStrategy {
+    PLAY_TO_PAUSE,
+    PAUSE_TO_PLAY,
+};
+
 class AudioPlayer {
 private:
     
-    const char* file_path;
+    const char* filePath;
     PlaybackCallback* callback;
     std::unique_ptr<FFmpegDecoder> decoder;
-    std::shared_ptr<CircularAudioBuffer> audio_buffer;
+    std::shared_ptr<CircularAudioBuffer> audioBuffer;
     std::thread decoding_thread;
-    int channel_count = 0;
+    
+    int channelCount = -1;
+    int sampleRate = -1;
+    int64_t fadeOutInSamples = 0;
+    int64_t currentPositionInFrames = 0;
+    int64_t currentFadeOutPosition = 0;
+    
+    std::atomic<bool> isPlaying { false };
+    std::atomic<bool> isToggleTransitionInProgress { false };
+    ResumeStrategy resumeStrategy = ResumeStrategy::PLAY_TO_PAUSE;
     
     OSStatus status;
     AudioComponentInstance audioUnit;
     static int kOutputBus;
     static int kEnableOutput;
+    static int64_t fadeOutLength;
     
     void init();
     void decode();
     void stop();
     
 public:
-    AudioPlayer(const char* file_path, PlaybackCallback* callback) : file_path(file_path), callback(callback) {
+    AudioPlayer(const char* filePath, PlaybackCallback* callback) : filePath(filePath), callback(callback) {
         init();
     }
     

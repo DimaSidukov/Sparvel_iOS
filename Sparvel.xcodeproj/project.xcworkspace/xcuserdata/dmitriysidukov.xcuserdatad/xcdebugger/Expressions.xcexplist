@@ -10,5 +10,16 @@
             </PersistentString>
          </PersistentStrings>
       </ContextState>
+      <ContextState
+         contextName = "AudioPlayer::pause:AudioPlayer.cpp">
+      </ContextState>
+      <ContextState
+         contextName = "AudioPlayer::stop:AudioPlayer.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "check != nullptr">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
    </ContextStates>
 </VariablesViewState>

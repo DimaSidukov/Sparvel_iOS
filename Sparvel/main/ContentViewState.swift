@@ -21,6 +21,5 @@ struct ContentViewState {
             isPlaying: isPlaying ?? self.isPlaying
         )
     }
-    
 }
 

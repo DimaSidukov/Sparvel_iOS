@@ -54,6 +54,11 @@ public:
     NSString *path = url.path;
 
     const char *filePath = [[NSFileManager defaultManager] fileSystemRepresentationWithPath:path];
+    
+    if (_audioPlayer) {
+        delete _audioPlayer;
+        _audioPlayer = nullptr;
+    }
 
     _audioPlayer = new AudioPlayer(filePath, _playbackCallback);
 }

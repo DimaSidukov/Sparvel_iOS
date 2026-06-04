@@ -12,7 +12,7 @@
 
 int AudioPlayer::kOutputBus = 0;
 int AudioPlayer::kEnableOutput = 1;
-int64_t AudioPlayer::fadeOutLength = 1000;
+int64_t AudioPlayer::fadeOutLength = 10;
 
 static OSStatus AuduioRenderPaybackCallback(void *inRefCon,
                                   AudioUnitRenderActionFlags *ioActionFlags,
@@ -183,6 +183,10 @@ OSStatus AudioPlayer::render(UInt32 inNumberFrames, AudioBufferList *ioData) {
             currentFadeOutPosition = 0;
         }
         
+        if (transitionSamplesTotal < samplesRead && resumeStrategy == ResumeStrategy::PLAY_TO_PAUSE) {
+            samplesRead = transitionSamplesTotal;
+        }
+        
         if (currentFadeOutPosition == 0) {
             isToggleTransitionInProgress.store(false);
         }
@@ -197,6 +201,8 @@ OSStatus AudioPlayer::render(UInt32 inNumberFrames, AudioBufferList *ioData) {
     
     size_t readFrames = samplesRead / channels;
     currentPositionInFrames += readFrames;
+    
+    // TODO: MOVE off audio thread TO TIMER? + ensure callbacks are called on main thread
     callback->on_position_update(convert_frames_to_millis(currentPositionInFrames, sampleRate), 0);
 
     return noErr;

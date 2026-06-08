@@ -11,6 +11,7 @@ internal import AVFoundation
 
 struct SongsView : View {
     
+    let bottomContentMargin: CGFloat
     let onSongSelected: (Song) -> Void
     
     @State
@@ -35,6 +36,7 @@ struct SongsView : View {
             case .Data(let loadedSongsViewState):
                 DataView(
                     uiState: loadedSongsViewState,
+                    bottomContentMargin: bottomContentMargin,
                     isFileImporterVisible: $isShowing,
                     onIntent: { intent in
                         viewModel.onIntent(intent: intent)
@@ -119,6 +121,7 @@ fileprivate struct LoadingView : View {
 fileprivate struct DataView: View {
     
     let uiState: LoadedSongsViewState
+    let bottomContentMargin: CGFloat
     @State var text: String = ""
     
     let isFileImporterVisible: Binding<Bool>
@@ -166,6 +169,14 @@ fileprivate struct DataView: View {
                         }
                     }
                 }
+            }
+            .contentMargins(.bottom, bottomContentMargin)
+            .onChange(of: text) { oldText, newText in
+                if oldText == newText {
+                    return
+                }
+                
+                onIntent(SongsIntent.FilterSongs(newText))
             }
         }
     }
@@ -228,7 +239,7 @@ extension Color {
 }
 
 #Preview {
-    SongsView { song in
+    SongsView(bottomContentMargin: 0) { song in
         
     }
 }

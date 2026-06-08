@@ -9,5 +9,6 @@ internal import Foundation
 
 enum SongsIntent {
     case LoadSongs([URL])
+    case FilterSongs(String)
     case RequestErrorState
 }

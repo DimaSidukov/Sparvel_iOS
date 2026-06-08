@@ -7,6 +7,9 @@
 
 import SwiftUI
 
+let collapsedPlayerImageSize = 40.0
+let collapsedPlayerImageVerticalPadding = 8.0
+
 struct ContentView: View {
     
     @State
@@ -16,10 +19,17 @@ struct ContentView: View {
         viewModel.uiState
     }
     
+    private let uiTabBarController = UITabBarController()
+    
     var body: some View {
         ZStack {
             TabView {
-                SongsView { song in
+                SongsView(
+                    bottomContentMargin: state.currentSong == nil
+                        ? 0
+                        : collapsedPlayerImageSize + (collapsedPlayerImageVerticalPadding * 2) +
+                            16.0
+                ) { song in
                     viewModel.onIntent(intent: ContentIntent.SelectSong(song))
                 }.tabItem {
                     Label("Songs", systemImage: "music.note")
@@ -48,11 +58,6 @@ struct ContentView: View {
                                 viewModel.onIntent(intent: intent)
                             }
                         )
-                        .onTapGesture {
-                            withAnimation(.easeInOut(duration: 0.35)) {
-                                viewModel.onIntent(intent: ContentIntent.TogglePlayerSheetState)
-                            }
-                        }
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: 100)
@@ -62,7 +67,7 @@ struct ContentView: View {
                         style: .continuous
                     )
                 )
-                .padding(.bottom, UITabBarController().height)
+                .padding(.bottom, uiTabBarController.height)
                 .padding(.top, 16)
                 .padding(.leading, 16)
                 .padding(.trailing, 16)
@@ -108,12 +113,24 @@ struct CollapsedPlayerView: View {
                 isPlaying: isPlaying,
                 onIntent: onIntent
             ).glassEffect()
+            
+            .onTapGesture {
+                withAnimation(.easeInOut(duration: 0.35)) {
+                    onIntent(ContentIntent.TogglePlayerSheetState)
+                }
+            }
         } else {
             CollapsedPlayerContentView(
                 song: song,
                 isPlaying: isPlaying,
                 onIntent: onIntent
             ).background(.background)
+            
+            .onTapGesture {
+                withAnimation(.easeInOut(duration: 0.35)) {
+                    onIntent(ContentIntent.TogglePlayerSheetState)
+                }
+            }
         }
     }
 }
@@ -146,15 +163,17 @@ struct CollapsedPlayerContentView : View {
                     .scaledToFill()
                     .opacity(artwork == nil ? 0 : 1)
             }
-            .frame(width: 40, height: 40)
+            .frame(
+                width: collapsedPlayerImageSize,
+                height: collapsedPlayerImageSize
+            )
             .clipShape(
                 RoundedRectangle(
                     cornerSize: CGSize(width: 16, height: 16),
                     style: .continuous
                 )
             )
-            
-            .clipped()
+            .padding(.vertical, collapsedPlayerImageVerticalPadding)
             .animation(.easeInOut(duration: 0.5), value: artwork != nil)
             
             VStack(alignment: .leading, spacing: 2) {
@@ -166,7 +185,7 @@ struct CollapsedPlayerContentView : View {
                     .truncationMode(.tail)
             }
             
-            Spacer()
+            Spacer(minLength: 0)
             
             Button {
                 onIntent(ContentIntent.TogglePlayback)
@@ -174,17 +193,19 @@ struct CollapsedPlayerContentView : View {
                 Image(systemName: image)
                     .font(.title3)
             }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 4)
+            .contentShape(Rectangle())
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 4)
-        .task {
-            guard artwork == nil else { return }
-            
+        .padding(.leading, 16)
+        .task(id: song.id) {
             if let data = song.bookmarkData,
                let image = await loadArtwork(bookmarkData: data) {
                 withAnimation(.easeInOut(duration: 0.5)) {
                     artwork = image
                 }
+            } else {
+                artwork = nil
             }
         }
     }
@@ -376,6 +397,7 @@ struct SimpleView : View {
 }
 
 fileprivate func formatProgress(progress: Double, duration: Int64) -> String {
+    // TODO: for some songs duration is zero, compute differently
     let progressInMillis = Int64((progress / 100) * Double(duration))
     return formatDuration(duration: progressInMillis)
 }

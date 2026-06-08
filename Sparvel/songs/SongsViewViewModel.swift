@@ -8,6 +8,8 @@ class SongsViewViewModel {
     private(set) var uiState: SongsViewState = .NoData
     private let repository = MediaRepository()
     
+    private var loadedSongs: [Song] = []
+    
     init() {
         queryCachedSongs()
     }
@@ -19,6 +21,8 @@ class SongsViewViewModel {
                 setLoadingState()
                 await repository.addMusicFiles(urls: urls)
             }
+        case .FilterSongs(let query):
+            filterSongs(query: query)
         case .RequestErrorState:
             setErrorState()
         }
@@ -45,6 +49,21 @@ class SongsViewViewModel {
             setNoDataState()
         }
     }
+    
+    // TODO: filter songs with missclicks and diactric symbols + permutations
+    private func filterSongs(query: String) {
+        
+        var filteredSongs: [Song]
+        if query.isEmpty {
+            filteredSongs = loadedSongs
+        } else {
+            filteredSongs = loadedSongs.filter { song in
+                song.artist.contains(query) || song.title.contains(query)
+            }
+        }
+        
+        uiState = .Data(LoadedSongsViewState(songs: filteredSongs))
+    }
 
     private func setErrorState() {
         uiState = .Error(
@@ -61,6 +80,7 @@ class SongsViewViewModel {
     }
     
     private func setLoadedState(songs: [Song]) {
-        uiState = .Data(LoadedSongsViewState(songs: songs))
+        loadedSongs = songs
+        uiState = .Data(LoadedSongsViewState(songs: loadedSongs))
     }
 }

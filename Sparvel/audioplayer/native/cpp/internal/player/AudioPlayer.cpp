@@ -202,14 +202,23 @@ OSStatus AudioPlayer::render(UInt32 inNumberFrames, AudioBufferList *ioData) {
     size_t readFrames = samplesRead / channels;
     currentPositionInFrames += readFrames;
     
-    // TODO: MOVE off audio thread TO TIMER? + ensure callbacks are called on main thread
-    callback->on_position_update(convert_frames_to_millis(currentPositionInFrames, sampleRate), 0);
-
+    size_t currentPositionInMs = convert_frames_to_millis(currentPositionInFrames, sampleRate);
+    if (currentPositionInMs - previousCallbackPosition > callbackStepInMs) {
+        callback->on_position_update(currentPositionInMs, 0);
+        previousCallbackPosition = currentPositionInMs;
+    }
+    
     return noErr;
 }
     
 void AudioPlayer::stop() {
-    status = AudioOutputUnitStop(audioUnit);
+    
+    if (audioUnit) {
+        status = AudioOutputUnitStop(audioUnit);
+        AudioUnitUninitialize(audioUnit);
+        AudioComponentInstanceDispose(audioUnit);
+    }
+    
     if (status != 0) {
         printf("Failed to stop audio unit, exit with status %d\n", status);
         return;
@@ -226,6 +235,7 @@ void AudioPlayer::stop() {
     decoder.reset();
     audioBuffer.reset();
     
+    previousCallbackPosition = 0;
     callback->on_position_update(0, 0);
     currentPositionInFrames = 0;
 }
@@ -261,7 +271,8 @@ void AudioPlayer::seek(int64_t positionMs) {
     decoder->seek_to(positionMs);
     
     decoding_thread = std::thread(&AudioPlayer::decode, this);
-    
+
+    previousCallbackPosition = positionMs;
     callback->on_position_update(positionMs, 1);
 }
 

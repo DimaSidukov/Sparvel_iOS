@@ -21,16 +21,22 @@ class NativeAudioPlayer : AudioPlayer {
     init() {
         self.audioEngine = NativeAudioEngine(
             position: { newPosition, force in
-                guard let currentSong = self.currentSong else { return }
-                let positionInSeconds = ((Double(newPosition) / 1000) / Double(currentSong.duration)) * 100.0
-                self.currentPosition = positionInSeconds
+                DispatchQueue.main.async {
+                    guard let currentSong = self.currentSong else { return }
+                    let positionInSeconds = ((Double(newPosition) / 1000) / Double(currentSong.duration)) * 100.0
+                    self.currentPosition = positionInSeconds
+                }
             },
             state: { isCurrentlyPlaying in
-                self.isPlaying = isCurrentlyPlaying == 1
+                DispatchQueue.main.async {
+                    self.isPlaying = isCurrentlyPlaying == 1
+                }
             },
             initialization: { isSuccess in
-                if isSuccess == 0 {
-                    self.currentSong = self.selectedSong
+                DispatchQueue.main.async {
+                    if isSuccess == 0 {
+                        self.currentSong = self.selectedSong
+                    }
                 }
             }
         )

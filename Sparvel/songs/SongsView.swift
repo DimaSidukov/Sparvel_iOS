@@ -133,6 +133,7 @@ fileprivate struct DataView: View {
         NavigationStack {
             List(uiState.songs, id: \.self.id) { song in
                 SongItem(
+                    id: song.id,
                     title: song.title,
                     artist: song.artist,
                     bookmarkData: song.bookmarkData
@@ -184,12 +185,15 @@ fileprivate struct DataView: View {
 
 fileprivate struct SongItem: View {
     
+    let id: String
     let title: String
     let artist: String
     let bookmarkData: Data?
     
     @State var placeholderColor = Color.random
     @State var artwork: UIImage? = nil
+    
+    @Environment(\.displayScale) var displayScale
     
     var body: some View {
         HStack {
@@ -209,7 +213,6 @@ fileprivate struct SongItem: View {
                 )
             )
             .clipped()
-            .animation(.easeInOut(duration: 0.5), value: artwork != nil)
             
             VStack(alignment: .leading) {
                 Text(title).lineLimit(1).truncationMode(.tail)
@@ -221,7 +224,7 @@ fileprivate struct SongItem: View {
             guard artwork == nil else { return }
             
             if let data = bookmarkData,
-               let image = await loadArtwork(bookmarkData: data) {
+               let image = await loadArtwork(id: id, bookmarkData: data, cacheStrategy: .songThumbnail(displayScale)) {
                 artwork = image
             }
         }

@@ -9,10 +9,12 @@ internal import Foundation
 internal import UIKit
 internal import AVFoundation
 
-func loadArtwork(bookmarkData: Data) async -> UIImage? {
+func loadArtwork(id: String, bookmarkData: Data, cacheStrategy: CacheStrategy) async -> UIImage? {
+    
+    let id = id as NSString
     
     let imageCache = ImageCache.shared
-    let currentDataImage = imageCache.image(for: bookmarkData)
+    let currentDataImage = imageCache.image(for: id, cacheStrategy: cacheStrategy)
     if currentDataImage  != nil {
         return currentDataImage
     }
@@ -42,7 +44,7 @@ func loadArtwork(bookmarkData: Data) async -> UIImage? {
     if let item = items?.first {
         if let data = try? await item.load(.dataValue) {
             if let image = UIImage(data: data) {
-                imageCache.insert(image, for: bookmarkData)
+                imageCache.insert(image, for: id, cacheStrategy: cacheStrategy)
                 return image
             }
         }
@@ -58,7 +60,7 @@ func loadArtwork(bookmarkData: Data) async -> UIImage? {
                         if let keyValue = try? await item.load(.value),
                            let keyedArtwork = (keyValue as? Data) {
                             if let image = UIImage(data: keyedArtwork) {
-                                imageCache.insert(image, for: bookmarkData)
+                                imageCache.insert(image, for: id, cacheStrategy: cacheStrategy)
                                 return image
                             }
                         }

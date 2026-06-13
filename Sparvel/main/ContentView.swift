@@ -26,9 +26,9 @@ struct ContentView: View {
             TabView {
                 SongsView(
                     bottomContentMargin: state.currentSong == nil
-                        ? 0
-                        : collapsedPlayerImageSize + (collapsedPlayerImageVerticalPadding * 2) +
-                            16.0
+                    ? 0
+                    : collapsedPlayerImageSize + (collapsedPlayerImageVerticalPadding * 2) +
+                    16.0
                 ) { song in
                     viewModel.onIntent(intent: ContentIntent.SelectSong(song))
                 }.tabItem {
@@ -67,11 +67,10 @@ struct ContentView: View {
                         style: .continuous
                     )
                 )
-                .padding(.bottom, uiTabBarController.height)
+                .padding(.bottom, uiTabBarController.height - 16)
                 .padding(.top, 16)
                 .padding(.leading, 16)
                 .padding(.trailing, 16)
-                
             }.ignoresSafeArea()
             if (state.isPlayerExpanded) {
                 ExpandedPlayerView(
@@ -113,24 +112,22 @@ struct CollapsedPlayerView: View {
                 isPlaying: isPlaying,
                 onIntent: onIntent
             ).glassEffect()
-            
-            .onTapGesture {
-                withAnimation(.easeInOut(duration: 0.35)) {
-                    onIntent(ContentIntent.TogglePlayerSheetState)
+                .onTapGesture {
+                    withAnimation(.easeInOut(duration: 0.35)) {
+                        onIntent(ContentIntent.TogglePlayerSheetState)
+                    }
                 }
-            }
         } else {
             CollapsedPlayerContentView(
                 song: song,
                 isPlaying: isPlaying,
                 onIntent: onIntent
             ).background(.background)
-            
-            .onTapGesture {
-                withAnimation(.easeInOut(duration: 0.35)) {
-                    onIntent(ContentIntent.TogglePlayerSheetState)
+                .onTapGesture {
+                    withAnimation(.easeInOut(duration: 0.35)) {
+                        onIntent(ContentIntent.TogglePlayerSheetState)
+                    }
                 }
-            }
         }
     }
 }
@@ -143,6 +140,8 @@ struct CollapsedPlayerContentView : View {
     
     @State var artwork: UIImage? = nil
     @State var placeholderColor = Color.random
+    
+    @Environment(\.displayScale) var displayScale
     
     var image : String {
         if (isPlaying) {
@@ -174,7 +173,6 @@ struct CollapsedPlayerContentView : View {
                 )
             )
             .padding(.vertical, collapsedPlayerImageVerticalPadding)
-            .animation(.easeInOut(duration: 0.5), value: artwork != nil)
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(song.title)
@@ -200,10 +198,8 @@ struct CollapsedPlayerContentView : View {
         .padding(.leading, 16)
         .task(id: song.id) {
             if let data = song.bookmarkData,
-               let image = await loadArtwork(bookmarkData: data) {
-                withAnimation(.easeInOut(duration: 0.5)) {
-                    artwork = image
-                }
+               let image = await loadArtwork(id: song.id, bookmarkData: data, cacheStrategy: .songThumbnail(displayScale)) {
+                artwork = image
             } else {
                 artwork = nil
             }
@@ -254,7 +250,6 @@ struct ExpandedPlayerView : View {
                 )
                 .padding(.horizontal, 16)
                 .clipped()
-                .animation(.easeInOut(duration: 0.5), value: artwork != nil)
                 
                 VStack(alignment: .leading) {
                     Text(song.title)
@@ -380,10 +375,8 @@ struct ExpandedPlayerView : View {
                 guard artwork == nil else { return }
                 
                 if let data = song.bookmarkData,
-                   let image = await loadArtwork(bookmarkData: data) {
-                    withAnimation(.easeInOut(duration: 0.5)) {
-                        artwork = image
-                    }
+                   let image = await loadArtwork(id: song.id, bookmarkData: data, cacheStrategy: .none) {
+                    artwork = image
                 }
             }
         }

@@ -7,9 +7,9 @@
 
 #include "inttypes.h"
 #include <atomic>
-#import <AudioUnit/AudioUnit.h>
-#import "../decoder/FFmpegDecoder.h"
-#import "PlaybackCallback.h"
+#include <AudioUnit/AudioUnit.h>
+#include "../decoder/FFmpegDecoder.h"
+#include "PlaybackCallback.h"
 
 
 enum class ResumeStrategy {
@@ -31,6 +31,9 @@ private:
     int64_t fadeOutInSamples = 0;
     int64_t currentPositionInFrames = 0;
     int64_t currentFadeOutPosition = 0;
+    
+    int64_t previousCallbackPosition = 0;
+    int64_t callbackStepInMs = 300;
     
     std::atomic<bool> isPlaying { false };
     std::atomic<bool> isToggleTransitionInProgress { false };

@@ -21,9 +21,22 @@
 		4BC65E532FC1B22000969D1B /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		4BA638EF2FDE969B00780274 /* Exceptions for "Sparvel" folder in "Sparvel" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 4B63F3A92F9FD16E00E51876 /* Sparvel */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		4B63F3AC2F9FD16E00E51876 /* Sparvel */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				4BA638EF2FDE969B00780274 /* Exceptions for "Sparvel" folder in "Sparvel" target */,
+			);
 			path = Sparvel;
 			sourceTree = "<group>";
 		};
@@ -287,6 +300,7 @@
 				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/Sparvel/FFmpeg.xcframework/ios-arm64";
 				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Sparvel/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -328,6 +342,7 @@
 				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/Sparvel/FFmpeg.xcframework/ios-arm64";
 				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Sparvel/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

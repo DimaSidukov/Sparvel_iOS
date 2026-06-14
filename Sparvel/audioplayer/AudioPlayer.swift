@@ -11,7 +11,7 @@ protocol AudioPlayer {
     var isPlaying: Bool { get }
     
     // 0-100 range
-    var currentPosition: Double { get }
+    var currentPositionInPercents: Double { get }
     
     var currentSong: Song? { get }
     

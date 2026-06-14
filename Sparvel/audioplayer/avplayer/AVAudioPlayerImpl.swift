@@ -6,7 +6,7 @@ internal import AVFoundation
 class AVAudioPlayerImpl: AudioPlayer {
 
     var isPlaying: Bool = false
-    var currentPosition: Double = 0.0   // 0...100
+    var currentPositionInPercents: Double = 0.0   // 0...100
     var currentSong: Song?
 
     private var player: AVPlayer? = nil
@@ -125,7 +125,7 @@ class AVAudioPlayerImpl: AudioPlayer {
 
             let percent = (currentMs / self.currentTrackDurationMs) * 100.0
 
-            self.currentPosition = min(max(percent, 0), 100)
+            self.currentPositionInPercents = min(max(percent, 0), 100)
         }
 
         stateObserver = player?.observe(\.timeControlStatus) { [weak self] player, _ in

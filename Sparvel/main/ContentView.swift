@@ -71,6 +71,10 @@ struct ContentView: View {
                 .padding(.top, 16)
                 .padding(.leading, 16)
                 .padding(.trailing, 16)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    viewModel.onIntent(intent: ContentIntent.TogglePlayerSheetState)
+                }
             }.ignoresSafeArea()
             if (state.isPlayerExpanded) {
                 ExpandedPlayerView(
@@ -112,22 +116,12 @@ struct CollapsedPlayerView: View {
                 isPlaying: isPlaying,
                 onIntent: onIntent
             ).glassEffect()
-                .onTapGesture {
-                    withAnimation(.easeInOut(duration: 0.35)) {
-                        onIntent(ContentIntent.TogglePlayerSheetState)
-                    }
-                }
         } else {
             CollapsedPlayerContentView(
                 song: song,
                 isPlaying: isPlaying,
                 onIntent: onIntent
             ).background(.background)
-                .onTapGesture {
-                    withAnimation(.easeInOut(duration: 0.35)) {
-                        onIntent(ContentIntent.TogglePlayerSheetState)
-                    }
-                }
         }
     }
 }

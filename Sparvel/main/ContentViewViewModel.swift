@@ -21,7 +21,7 @@ class ContentViewViewModel {
         )
     }
     var currentPosition : Double {
-        player.currentPosition
+        player.currentPositionInPercents
     }
     
     func onIntent(intent: ContentIntent) {
